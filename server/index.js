@@ -19,8 +19,8 @@ app.use(express.urlencoded({ extended: true })); // parse form data
 // ── Routes (you will uncomment these as you build each phase) ──
  app.use('/api/auth',require('./routes/auth'));
  app.use('/api/users',require('./routes/user'));
-// app.use('/api/workouts',   require('./routes/workout'));
-// app.use('/api/exercises',  require('./routes/exercise'));
+ app.use('/api/workouts',   require('./routes/workout'));
+ app.use('/api/exercises',  require('./routes/exercise'));
 // app.use('/api/nutrition',  require('./routes/nutrition'));
 // app.use('/api/posts',      require('./routes/posts'));
 // app.use('/api/challenges', require('./routes/challenges'));
