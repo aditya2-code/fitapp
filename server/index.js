@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true })); // parse form data
  app.use('/api/exercises',  require('./routes/exercise'));
  app.use('/api/nutrition',  require('./routes/nutrition'));
  app.use('/api/posts',      require('./routes/posts'));
-// app.use('/api/challenges', require('./routes/challenges'));
+ app.use('/api/challenges', require('./routes/challenges'));
 // app.use('/api/notifications', require('./routes/notifications'));
 
 // ── Health Check Route ──────────────────────────────────────
