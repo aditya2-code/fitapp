@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { createNotification } = require('./notificationController');
 const { cloudinary } = require('../config/cloudinary');
 
 // ─────────────────────────────────────────────────────────────
@@ -150,6 +151,14 @@ const followUser = async (req, res) => {
 
     await targetUser.save();
     await currentUser.save();
+
+    await createNotification({
+        recipient:   targetUser._id,
+        sender:      currentUserId,
+        type:        'new_follower',
+        referenceId: currentUserId,
+        message:     `${req.user.name} started following you`,
+    });
 
     res.status(200).json({ message: `You are now following ${targetUser.name}` });
   } catch (error) {

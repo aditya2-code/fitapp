@@ -1,3 +1,4 @@
+const { createNotification } = require('./notificationController');
 const Post = require('../models/Post');
 const User = require('../models/User');
 
@@ -152,6 +153,16 @@ const toggleLike = async (req, res) => {
 
         await post.save();
 
+        if (!alreadyLiked) {
+            await createNotification({
+                recipient:   post.user,
+                sender:      req.user._id,
+                type:        'post_like',
+                referenceId: post._id,
+                message:     `${req.user.name} liked your post`,
+            });
+        }
+
         res.status(200).json({
             message:    alreadyLiked ? 'Post unliked' : 'Post liked',
             totalLikes: post.likes.length,
@@ -191,6 +202,14 @@ const addComment = async (req, res) => {
         });
 
         await post.save();
+
+        await createNotification({
+            recipient:   post.user,
+            sender:      req.user._id,
+            type:        'post_comment',
+            referenceId: post._id,
+            message:     `${req.user.name} commented on your post`,
+        });
 
         // Repopulate and return the updated post
         const updatedPost = await Post.findById(post._id)

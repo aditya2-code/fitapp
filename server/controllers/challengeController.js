@@ -1,3 +1,6 @@
+const { updateLeaderboard }    = require('../utils/socketManager');
+const { createNotification }   = require('./notificationController');
+
 const Challenge = require('../models/Challenge');
 const Workout   = require('../models/Workout');
 
@@ -273,6 +276,33 @@ const submitWorkout = async (req, res) => {
         // Add score to participant
         challenge.participants[participantIndex].score += scoreToAdd;
         await challenge.save();
+
+        // ── Broadcast live leaderboard update via Socket.io ──────
+        const updatedChallenge = await Challenge.findById(challenge._id)
+            .populate('participants.user', 'name profilePicture');
+
+        const ranked = updatedChallenge.participants
+            .slice()
+            .sort((a, b) => b.score - a.score)
+            .map((p, index) => ({
+                rank:  index + 1,
+                user:  p.user,
+                score: p.score,
+            }));
+
+        updateLeaderboard(challenge._id.toString(), {
+            challengeId: challenge._id,
+            leaderboard: ranked,
+        });
+
+// ── Notify challenge creator of score update ─────────────
+await createNotification({
+    recipient:   challenge.createdBy,
+    sender:      req.user._id,
+    type:        'challenge_update',
+    referenceId: challenge._id,
+    message:     `${req.user.name} submitted a workout in "${challenge.title}"`,
+});
 
         const populated = await Challenge.findById(challenge._id)
             .populate('participants.user', 'name profilePicture');

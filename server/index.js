@@ -1,51 +1,62 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const connectDB = require('./config/db');
+const express    = require('express');
+const dotenv     = require('dotenv');
+const cors       = require('cors');
+const http       = require('http');           // ← new
+const { Server } = require('socket.io');      // ← new
+const connectDB  = require('./config/db');
+const { initSocket } = require('./utils/socketManager'); // ← new
 
-// Load environment variables first, before anything else
 dotenv.config();
-
-// Connect to MongoDB
 connectDB();
 
-const app = express();
+const app    = express();
+const server = http.createServer(app);        // ← wrap express with http server
+
+// ── Initialize Socket.io ────────────────────────────────────
+const io = new Server(server, {
+    cors: {
+        origin:  '*',                         // tighten this in production
+        methods: ['GET', 'POST'],
+    },
+});
+initSocket(io);
 
 // ── Core Middleware ─────────────────────────────────────────
 app.use(cors());
-app.use(express.json());             // parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // parse form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// ── Routes (you will uncomment these as you build each phase) ──
- app.use('/api/auth',require('./routes/auth'));
- app.use('/api/users',require('./routes/user'));
- app.use('/api/workouts',   require('./routes/workout'));
- app.use('/api/exercises',  require('./routes/exercise'));
- app.use('/api/nutrition',  require('./routes/nutrition'));
- app.use('/api/posts',      require('./routes/posts'));
- app.use('/api/challenges', require('./routes/challenges'));
-// app.use('/api/notifications', require('./routes/notifications'));
+// ── Routes ──────────────────────────────────────────────────
+app.use('/api/auth',          require('./routes/auth'));
+app.use('/api/users',         require('./routes/user'));
+app.use('/api/workouts',      require('./routes/workout'));
+app.use('/api/exercises',     require('./routes/exercise'));
+app.use('/api/nutrition',     require('./routes/nutrition'));
+app.use('/api/posts',         require('./routes/posts'));
+app.use('/api/challenges',    require('./routes/challenges'));
+app.get('/api/notif-test', (req, res) => res.json({ ok: true }));
+app.use('/api/notifications', require('./routes/notifications')); // ← uncomment
 
-// ── Health Check Route ──────────────────────────────────────
+// ── Health Check ────────────────────────────────────────────
 app.get('/', (req, res) => {
-  res.json({ message: 'Fitness App API is running' });
+    res.json({ message: 'Fitness App API is running' });
 });
 
-// ── 404 Handler (unknown routes) ───────────────────────────
+// ── 404 Handler ─────────────────────────────────────────────
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+    res.status(404).json({ message: 'Route not found' });
 });
 
 // ── Global Error Handler ────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    message: err.message || 'Internal Server Error',
-  });
+    console.error(err.stack);
+    res.status(500).json({
+        message: err.message || 'Internal Server Error',
+    });
 });
 
 // ── Start Server ────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+server.listen(PORT, () => {              // ← use server.listen not app.listen
+    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
