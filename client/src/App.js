@@ -1,3 +1,5 @@
+// Add this import at the top of App.js
+import Layout from './components/common/Layout';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
@@ -39,25 +41,39 @@ function App() {
 
                     {/* ── Protected Routes ───────────────── */}
                     <Route path="/dashboard" element={
-                        <ProtectedRoute><DashboardPage /></ProtectedRoute>
+                        <ProtectedRoute>
+                           <Layout><DashboardPage /></Layout>
+                       </ProtectedRoute>
                     }/>
                     <Route path="/profile/:id" element={
-                        <ProtectedRoute><ProfilePage /></ProtectedRoute>
+                        <ProtectedRoute>
+                           <Layout><ProfilePage /></Layout>
+                       </ProtectedRoute>
                     }/>
                     <Route path="/workouts" element={
-                        <ProtectedRoute><WorkoutPage /></ProtectedRoute>
+                        <ProtectedRoute>
+                            <Layout><WorkoutPage /></Layout>
+                        </ProtectedRoute>
                     }/>
                     <Route path="/nutrition" element={
-                        <ProtectedRoute><NutritionPage /></ProtectedRoute>
+                        <ProtectedRoute>
+                            <Layout><NutritionPage /></Layout>
+                        </ProtectedRoute>
                     }/>
                     <Route path="/feed" element={
-                        <ProtectedRoute><FeedPage /></ProtectedRoute>
+                        <ProtectedRoute>
+                            <Layout><FeedPage /></Layout>
+                        </ProtectedRoute>
                     }/>
                     <Route path="/challenges" element={
-                        <ProtectedRoute><ChallengesPage /></ProtectedRoute>
+                        <ProtectedRoute>
+                            <Layout><ChallengesPage /></Layout>
+                        </ProtectedRoute>
                     }/>
                     <Route path="/notifications" element={
-                        <ProtectedRoute><NotificationsPage /></ProtectedRoute>
+                        <ProtectedRoute>
+                            <Layout><NotificationsPage /></Layout>
+                        </ProtectedRoute>
                     }/>
 
                     {/* ── Default redirect ───────────────── */}
