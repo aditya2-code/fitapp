@@ -34,7 +34,6 @@ app.use('/api/exercises',     require('./routes/exercise'));
 app.use('/api/nutrition',     require('./routes/nutrition'));
 app.use('/api/posts',         require('./routes/posts'));
 app.use('/api/challenges',    require('./routes/challenges'));
-app.get('/api/notif-test', (req, res) => res.json({ ok: true }));
 app.use('/api/notifications', require('./routes/notifications')); // ← uncomment
 
 // ── Health Check ────────────────────────────────────────────
