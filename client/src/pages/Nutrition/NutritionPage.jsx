@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useAuth }             from '../../context/AuthContext';
-import { nutritionAPI }        from '../../api';
-import Spinner from '../../components/common/Spinner';
-import toast   from 'react-hot-toast';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth }                           from '../../context/AuthContext';
+import { nutritionAPI }                      from '../../api';
+import Spinner                               from '../../components/common/Spinner';
+import toast                                 from 'react-hot-toast';
 
 const MEALS = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
 
@@ -22,8 +22,8 @@ const MacroBar = ({ label, value, max, color }) => (
 );
 
 const NutritionPage = () => {
-    const { user }     = useAuth();
-    const today        = new Date().toISOString().split('T')[0];
+    const { user }  = useAuth();
+    const today     = new Date().toISOString().split('T')[0];
 
     const [selectedDate,  setSelectedDate]  = useState(today);
     const [dailyLog,      setDailyLog]      = useState(null);
@@ -36,11 +36,7 @@ const NutritionPage = () => {
     const [quantity,      setQuantity]      = useState(100);
     const [logging,       setLogging]       = useState(false);
 
-    useEffect(() => {
-        fetchDailyLog();
-    }, [selectedDate]);
-
-    const fetchDailyLog = async () => {
+    const fetchDailyLog = useCallback(async () => {
         try {
             setLoading(true);
             const res = await nutritionAPI.getDailyLog(user._id, selectedDate);
@@ -50,7 +46,11 @@ const NutritionPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user._id, selectedDate]);
+
+    useEffect(() => {
+        fetchDailyLog();
+    }, [fetchDailyLog]);
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;
@@ -131,10 +131,10 @@ const NutritionPage = () => {
                 <h2 className="text-white font-semibold mb-4">📊 Daily Summary</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     {[
-                        { label: 'Calories', value: totals.calories, unit: 'kcal', color: 'text-orange-400' },
-                        { label: 'Protein',  value: totals.protein,  unit: 'g',    color: 'text-red-400'    },
-                        { label: 'Carbs',    value: totals.carbohydrates, unit: 'g', color: 'text-yellow-400' },
-                        { label: 'Fat',      value: totals.fat,      unit: 'g',    color: 'text-blue-400'   },
+                        { label: 'Calories', value: totals.calories,      unit: 'kcal', color: 'text-orange-400' },
+                        { label: 'Protein',  value: totals.protein,       unit: 'g',    color: 'text-red-400'    },
+                        { label: 'Carbs',    value: totals.carbohydrates, unit: 'g',    color: 'text-yellow-400' },
+                        { label: 'Fat',      value: totals.fat,           unit: 'g',    color: 'text-blue-400'   },
                     ].map((macro) => (
                         <div key={macro.label} className="bg-dark rounded-xl p-4 text-center">
                             <p className={`text-2xl font-bold ${macro.color}`}>
@@ -147,7 +147,6 @@ const NutritionPage = () => {
                     ))}
                 </div>
 
-                {/* Macro Bars */}
                 <div className="space-y-3">
                     <MacroBar label="Protein"       value={totals.protein}       max={200} color="bg-red-400"    />
                     <MacroBar label="Carbohydrates" value={totals.carbohydrates} max={300} color="bg-yellow-400" />
@@ -159,7 +158,7 @@ const NutritionPage = () => {
             <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
                 <h2 className="text-white font-semibold">🔍 Add Food</h2>
 
-                {/* Meal selector */}
+                {/* Meal Selector */}
                 <div className="flex gap-2 flex-wrap">
                     {MEALS.map((meal) => (
                         <button
@@ -176,13 +175,13 @@ const NutritionPage = () => {
                     ))}
                 </div>
 
-                {/* Search bar */}
+                {/* Search Bar */}
                 <div className="flex gap-2">
                     <input
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        placeholder="Search for a food... e.g. banana, chicken"
+                        placeholder="Search food... e.g. banana, chicken"
                         className="flex-1 bg-dark border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
                     />
                     <button
@@ -216,9 +215,9 @@ const NutritionPage = () => {
                                     </span>
                                 </div>
                                 <p className="text-slate-500 text-xs mt-1">
-                                    P: {food.nutrients.protein}g ·
-                                    C: {food.nutrients.carbs}g ·
-                                    F: {food.nutrients.fat}g
+                                    P:{food.nutrients.protein}g ·
+                                    C:{food.nutrients.carbs}g ·
+                                    F:{food.nutrients.fat}g
                                     <span className="ml-1">(per 100g)</span>
                                 </p>
                             </div>
@@ -226,7 +225,7 @@ const NutritionPage = () => {
                     </div>
                 )}
 
-                {/* Log selected food */}
+                {/* Log Selected Food */}
                 {selectedFood && (
                     <div className="bg-dark border border-primary rounded-xl p-4 space-y-3">
                         <p className="text-white font-medium">
@@ -248,9 +247,7 @@ const NutritionPage = () => {
                                 <p className="text-orange-400 font-bold text-lg">
                                     {Math.round(selectedFood.nutrients.calories * quantity / 100)} kcal
                                 </p>
-                                <p className="text-slate-400 text-xs">
-                                    for {quantity}g
-                                </p>
+                                <p className="text-slate-400 text-xs">for {quantity}g</p>
                             </div>
                         </div>
                         <button
@@ -290,9 +287,7 @@ const NutritionPage = () => {
                                             className="flex items-center justify-between bg-dark rounded-lg px-4 py-2"
                                         >
                                             <div>
-                                                <p className="text-white text-sm">
-                                                    {entry.foodName}
-                                                </p>
+                                                <p className="text-white text-sm">{entry.foodName}</p>
                                                 <p className="text-slate-500 text-xs">
                                                     {entry.quantity}{entry.unit} · P:{entry.protein}g C:{entry.carbohydrates}g F:{entry.fat}g
                                                 </p>

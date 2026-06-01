@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useAuth }             from '../../context/AuthContext';
-import { challengeAPI, workoutAPI } from '../../api';
-import Spinner from '../../components/common/Spinner';
-import toast   from 'react-hot-toast';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth }                           from '../../context/AuthContext';
+import { challengeAPI, workoutAPI }          from '../../api';
+import Spinner                               from '../../components/common/Spinner';
+import toast                                 from 'react-hot-toast';
 
 const METRICS = [
-    { value: 'total_workouts', label: 'Total Workouts', icon: '💪' },
-    { value: 'total_minutes',  label: 'Total Minutes',  icon: '⏱'  },
+    { value: 'total_workouts',   label: 'Total Workouts',   icon: '💪' },
+    { value: 'total_minutes',    label: 'Total Minutes',    icon: '⏱'  },
     { value: 'challenge_points', label: 'Challenge Points', icon: '⭐' },
 ];
 
@@ -29,11 +29,7 @@ const ChallengesPage = () => {
         startDate: '', endDate: '',
     });
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [chalRes, wktRes] = await Promise.all([
                 challengeAPI.getAll(),
@@ -46,7 +42,11 @@ const ChallengesPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user._id]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handleCreate = async () => {
         if (!form.title || !form.startDate || !form.endDate)
@@ -56,7 +56,11 @@ const ChallengesPage = () => {
             const res = await challengeAPI.create(form);
             setChallenges([res.data, ...challenges]);
             setShowCreate(false);
-            setForm({ title: '', description: '', metric: 'total_workouts', startDate: '', endDate: '' });
+            setForm({
+                title: '', description: '',
+                metric: 'total_workouts',
+                startDate: '', endDate: '',
+            });
             toast.success('Challenge created!');
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to create');
@@ -183,7 +187,7 @@ const ChallengesPage = () => {
                         />
                     </div>
 
-                    {/* Metric selector */}
+                    {/* Metric Selector */}
                     <div>
                         <label className="block text-slate-400 text-sm mb-2">
                             Scoring Metric
@@ -280,7 +284,7 @@ const ChallengesPage = () => {
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 flex-wrap">
                                             <h3 className="text-white font-semibold">
                                                 {challenge.title}
                                             </h3>
@@ -297,7 +301,7 @@ const ChallengesPage = () => {
                                                 {challenge.description}
                                             </p>
                                         )}
-                                        <div className="flex gap-4 mt-2 text-xs text-slate-500">
+                                        <div className="flex gap-4 mt-2 text-xs text-slate-500 flex-wrap">
                                             <span>
                                                 📅 {new Date(challenge.startDate).toLocaleDateString()} -
                                                 {new Date(challenge.endDate).toLocaleDateString()}
@@ -418,11 +422,11 @@ const ChallengesPage = () => {
                                                 : 'bg-dark'
                                         }`}
                                     >
-                                        {/* Rank badge */}
+                                        {/* Rank Badge */}
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                                            entry.rank === 1 ? 'bg-yellow-500 text-black' :
-                                            entry.rank === 2 ? 'bg-slate-400 text-black' :
-                                            entry.rank === 3 ? 'bg-orange-600 text-white' :
+                                            entry.rank === 1 ? 'bg-yellow-500 text-black'  :
+                                            entry.rank === 2 ? 'bg-slate-400 text-black'   :
+                                            entry.rank === 3 ? 'bg-orange-600 text-white'  :
                                             'bg-dark border border-border text-slate-400'
                                         }`}>
                                             {entry.rank === 1 ? '🥇' :

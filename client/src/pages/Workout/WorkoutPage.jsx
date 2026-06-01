@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useAuth }             from '../../context/AuthContext';
-import { workoutAPI, exerciseAPI } from '../../api';
-import Spinner from '../../components/common/Spinner';
-import toast   from 'react-hot-toast';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth }                           from '../../context/AuthContext';
+import { workoutAPI, exerciseAPI }           from '../../api';
+import Spinner                               from '../../components/common/Spinner';
+import toast                                 from 'react-hot-toast';
 
 const MUSCLE_GROUPS = [
     'All','Chest','Back','Legs',
@@ -18,20 +18,15 @@ const WorkoutPage = () => {
     const [showLogger, setShowLogger] = useState(false);
     const [filter,     setFilter]     = useState('All');
 
-    // ── Logger form state ──────────────────────────────────────
-    const [title,     setTitle]     = useState('');
-    const [duration,  setDuration]  = useState('');
-    const [notes,     setNotes]     = useState('');
-    const [logItems,  setLogItems]  = useState([
+    const [title,    setTitle]    = useState('');
+    const [duration, setDuration] = useState('');
+    const [notes,    setNotes]    = useState('');
+    const [logItems, setLogItems] = useState([
         { exerciseId: '', sets: [{ reps: '', weight: '' }] },
     ]);
     const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [workoutsRes, exercisesRes] = await Promise.all([
                 workoutAPI.getUserWorkouts(user._id),
@@ -44,9 +39,12 @@ const WorkoutPage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user._id]);
 
-    // ── Set management ─────────────────────────────────────────
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
     const addSet = (itemIdx) => {
         const updated = [...logItems];
         updated[itemIdx].sets.push({ reps: '', weight: '' });
@@ -79,7 +77,6 @@ const WorkoutPage = () => {
         setLogItems(updated);
     };
 
-    // ── Submit workout ─────────────────────────────────────────
     const handleSubmit = async () => {
         if (!title.trim()) return toast.error('Workout title is required');
         if (logItems.some((item) => !item.exerciseId))
@@ -94,7 +91,7 @@ const WorkoutPage = () => {
                 exercises: logItems.map((item) => ({
                     exercise: item.exerciseId,
                     sets:     item.sets.map((s) => ({
-                        reps:   parseInt(s.reps)   || 0,
+                        reps:   parseInt(s.reps)    || 0,
                         weight: parseFloat(s.weight) || 0,
                     })),
                 })),
@@ -151,12 +148,11 @@ const WorkoutPage = () => {
                 </button>
             </div>
 
-            {/* ── Workout Logger Form ──────────────────────── */}
+            {/* Workout Logger Form */}
             {showLogger && (
                 <div className="bg-card border border-border rounded-2xl p-6 space-y-5">
                     <h2 className="text-xl font-semibold text-white">New Workout Session</h2>
 
-                    {/* Title + Duration */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-slate-400 text-sm mb-1">
@@ -183,10 +179,10 @@ const WorkoutPage = () => {
                         </div>
                     </div>
 
-                    {/* Exercise Filter */}
+                    {/* Muscle Group Filter */}
                     <div>
                         <label className="block text-slate-400 text-sm mb-2">
-                            Filter exercises by muscle group
+                            Filter by muscle group
                         </label>
                         <div className="flex flex-wrap gap-2">
                             {MUSCLE_GROUPS.map((mg) => (
@@ -212,7 +208,6 @@ const WorkoutPage = () => {
                                 key={itemIdx}
                                 className="bg-dark border border-border rounded-xl p-4 space-y-3"
                             >
-                                {/* Exercise Selector */}
                                 <div className="flex items-center gap-3">
                                     <select
                                         value={item.exerciseId}
@@ -236,7 +231,7 @@ const WorkoutPage = () => {
                                     )}
                                 </div>
 
-                                {/* Sets Table */}
+                                {/* Sets */}
                                 <div className="space-y-2">
                                     <div className="grid grid-cols-4 gap-2 text-slate-500 text-xs px-1">
                                         <span>Set</span>
@@ -295,7 +290,6 @@ const WorkoutPage = () => {
                         + Add Exercise
                     </button>
 
-                    {/* Notes */}
                     <div>
                         <label className="block text-slate-400 text-sm mb-1">Notes</label>
                         <textarea
@@ -317,7 +311,7 @@ const WorkoutPage = () => {
                 </div>
             )}
 
-            {/* ── Workout History ──────────────────────────── */}
+            {/* Workout History */}
             <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-white">
                     History ({workouts.length})
@@ -358,7 +352,6 @@ const WorkoutPage = () => {
                                 </button>
                             </div>
 
-                            {/* Exercise list */}
                             <div className="mt-4 space-y-2">
                                 {workout.exercises.map((ex, i) => (
                                     <div

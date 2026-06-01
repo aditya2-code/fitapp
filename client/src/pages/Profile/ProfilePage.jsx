@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams }                   from 'react-router-dom';
-import { useAuth }                     from '../../context/AuthContext';
-import { userAPI, postAPI }            from '../../api';
-import Spinner                         from '../../components/common/Spinner';
-import toast                           from 'react-hot-toast';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams }                                 from 'react-router-dom';
+import { useAuth }                                   from '../../context/AuthContext';
+import { userAPI, postAPI }                          from '../../api';
+import Spinner                                       from '../../components/common/Spinner';
+import toast                                         from 'react-hot-toast';
 
 const FITNESS_GOALS = [
     'Strength','Endurance','Weight Loss',
@@ -11,10 +11,10 @@ const FITNESS_GOALS = [
 ];
 
 const ProfilePage = () => {
-    const { id }                          = useParams();
-    const { user: currentUser, updateUser } = useAuth();
-    const isOwnProfile                    = currentUser._id === id;
-    const fileRef                         = useRef();
+    const { id }                              = useParams();
+    const { user: currentUser, updateUser }   = useAuth();
+    const isOwnProfile                        = currentUser._id === id;
+    const fileRef                             = useRef();
 
     const [profile,   setProfile]   = useState(null);
     const [posts,     setPosts]     = useState([]);
@@ -27,11 +27,7 @@ const ProfilePage = () => {
         metrics: { weight: '', height: '' },
     });
 
-    useEffect(() => {
-        fetchProfile();
-    }, [id]);
-
-    const fetchProfile = async () => {
+    const fetchProfile = useCallback(async () => {
         try {
             setLoading(true);
             const [profileRes, postsRes] = await Promise.all([
@@ -58,7 +54,11 @@ const ProfilePage = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [id, currentUser._id]);
+
+    useEffect(() => {
+        fetchProfile();
+    }, [fetchProfile]);
 
     const handleSave = async () => {
         try {
@@ -225,7 +225,9 @@ const ProfilePage = () => {
                 {editing && (
                     <div className="mt-6 border-t border-border pt-6 space-y-4">
                         <div>
-                            <label className="block text-slate-400 text-sm mb-1">Name</label>
+                            <label className="block text-slate-400 text-sm mb-1">
+                                Name
+                            </label>
                             <input
                                 value={formData.name}
                                 onChange={(e) =>
