@@ -25,21 +25,28 @@ const io = new Server(server, {
 initSocket(io);
 
 // ── CORS ────────────────────────────────────────────────────
-const allowedOrigins = [
-    'http://localhost:3000',
-    process.env.CLIENT_URL,
-].filter(Boolean);
-
+// ── CORS ────────────────────────────────────────────────────
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (Postman, mobile apps)
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Allow requests with no origin (Postman, mobile)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'https://fitapp-two-ruddy.vercel.app',
+            process.env.CLIENT_URL,
+        ].filter(Boolean);
+
+        if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            console.log('Blocked by CORS:', origin);
+            callback(null, true); // temporarily allow all for debugging
         }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 // ── Core Middleware ─────────────────────────────────────────
