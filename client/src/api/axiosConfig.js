@@ -1,11 +1,13 @@
 import axios from 'axios';
 
+// ← paste your exact Render URL here, no trailing slash
+const API_URL = 'https://fitapp-mp4z.onrender.com/api';
+
 const axiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+    baseURL: API_URL,
     headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT token to every request
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -17,7 +19,6 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Handle expired token globally
 axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
