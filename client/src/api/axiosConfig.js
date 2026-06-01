@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
     headers: { 'Content-Type': 'application/json' },
 });
 
-// Automatically attach JWT token to every request
+// Attach JWT token to every request
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token');
@@ -17,7 +17,7 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// Handle expired token globally — redirect to login
+// Handle expired token globally
 axiosInstance.interceptors.response.use(
     (response) => response,
     (error) => {
