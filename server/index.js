@@ -1,28 +1,48 @@
 const express    = require('express');
 const dotenv     = require('dotenv');
 const cors       = require('cors');
-const http       = require('http');           // ← new
-const { Server } = require('socket.io');      // ← new
+const http       = require('http');
+const { Server } = require('socket.io');
 const connectDB  = require('./config/db');
-const { initSocket } = require('./utils/socketManager'); // ← new
+const { initSocket } = require('./utils/socketManager');
 
+// ── Load env variables first ────────────────────────────────
 dotenv.config();
+
+// ── Connect to MongoDB ──────────────────────────────────────
 connectDB();
 
 const app    = express();
-const server = http.createServer(app);        // ← wrap express with http server
+const server = http.createServer(app);
 
 // ── Initialize Socket.io ────────────────────────────────────
 const io = new Server(server, {
     cors: {
-        origin:  '*',                         // tighten this in production
+        origin:  '*',
         methods: ['GET', 'POST'],
     },
 });
 initSocket(io);
 
+// ── CORS ────────────────────────────────────────────────────
+const allowedOrigins = [
+    'http://localhost:3000',
+    process.env.CLIENT_URL,
+].filter(Boolean);
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (Postman, mobile apps)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+}));
+
 // ── Core Middleware ─────────────────────────────────────────
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,7 +54,7 @@ app.use('/api/exercises',     require('./routes/exercise'));
 app.use('/api/nutrition',     require('./routes/nutrition'));
 app.use('/api/posts',         require('./routes/posts'));
 app.use('/api/challenges',    require('./routes/challenges'));
-app.use('/api/notifications', require('./routes/notifications')); // ← uncomment
+app.use('/api/notifications', require('./routes/notifications'));
 
 // ── Health Check ────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -56,6 +76,6 @@ app.use((err, req, res, next) => {
 
 // ── Start Server ────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {              // ← use server.listen not app.listen
+server.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
