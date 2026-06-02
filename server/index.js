@@ -15,6 +15,23 @@ connectDB();
 const app    = express();
 const server = http.createServer(app);
 
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') {
+        return res.status(200).json({});
+    }
+    next();
+});
+
+app.use(cors({
+    origin: '*',
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 // ── Initialize Socket.io ────────────────────────────────────
 const io = new Server(server, {
     cors: {
@@ -25,29 +42,6 @@ const io = new Server(server, {
 initSocket(io);
 
 // ── CORS ────────────────────────────────────────────────────
-// ── CORS ────────────────────────────────────────────────────
-app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (Postman, mobile)
-        if (!origin) return callback(null, true);
-
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'https://fitapp-two-ruddy.vercel.app',
-            process.env.CLIENT_URL,
-        ].filter(Boolean);
-
-        if (allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            console.log('Blocked by CORS:', origin);
-            callback(null, true); // temporarily allow all for debugging
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
 
 // ── Core Middleware ─────────────────────────────────────────
 app.use(express.json());
